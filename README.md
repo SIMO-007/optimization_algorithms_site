@@ -1,9 +1,12 @@
 # optimization_algorithms_website
 REQUIREMENTS : 
+
 ** python packages : flask, flask_cors, numpy
 
 To run :
+
 ** run app.py
+
 ** go to http://127.0.0.1:5000/
 
 For now the simplex algorithm and gaussian elimination are the only implemented algorithms, and planning to implement more similar ones in the future.
