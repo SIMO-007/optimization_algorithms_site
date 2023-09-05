@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <header class="bg-primary text-white py-4">
+        <div class="container text-center">
+          <h1 class="display-4">SIMPLEX SOLVER</h1>
+          <p class="lead">An Elegant Solution for Optimization</p>
+        </div>
+      </header>
+      
+    <div id = "input">
+        <br><br>
+        <label for="vars"> number of variables : </label><input type="number" name="vars" id="vars">
+        <br><br>
+        <label for="constraints"> number of constraints : </label><input type="number" name="constraints"
+            id="constraints">
+            <br><br>
+        <button id="set" >set</button>
+        <br>
+    </div>
+
+    <div id="system" class="container mt-4"> </div>
+        <br>
+        <br>
+        <div id="result-container" class="container mt-4 result-container"></div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script type="text/javascript">
+            function makeTable(array) {
+                var table = document.createElement('table');
+                for (var i = 0; i < array.length; i++) {
+                    var row = document.createElement('tr');
+                    for (var j = 0; j < array[i].length; j++) {
+                        var cell = document.createElement('td');
+                        cell.textContent = array[i][j];
+                        row.appendChild(cell);
+                    }
+                    table.appendChild(row);
+                }
+                return table;
+            }
+            document.getElementById('set').onclick = function set() {
+                var resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = ''
+                var constraints = parseInt(document.getElementById('constraints').value);
+                var vars = parseInt(document.getElementById('vars').value);
+                var output = document.getElementById('system');
+                output.innerHTML = '<br>';
+                for (var i = 0; i < constraints; i++) {
+                    var item = document.createElement('div');
+
+                    for (var j = 0; j < vars; j++) {
+                        item.innerHTML += ' <input class="A" type="text" name="" id=' + i + j + ' size="1" value = ""> x' + (j + 1);
+                        if (j < vars - 1) {
+                            item.innerHTML += ' + '
+                        }
+                    }
+                    item.innerHTML += ' <= <input class="b" type="text" name="" id=' + i + ' size="1" value = ""> <br>'
+                    output.appendChild(item);
+                }
+                var max = document.createElement('div');
+                max.innerHTML = "<br> MAX : "
+                for (var j = 0; j < vars; j++) {
+                    max.innerHTML += ' <input class="max" type="text" name="" id="max' + j + '" size="1" value = ""> x' + (j + 1);
+                    if (j < vars - 1) {
+                        max.innerHTML += ' + '
+                    }
+                }
+                output.appendChild(max)
+                var gen = document.createElement('div');
+                gen.innerHTML = '<br> <button id="generate">generate</button> <button id="reset">reset </button> '
+                output.appendChild(gen);
+                var tab = document.createElement('div');
+
+
+                document.getElementById('generate').onclick = function f1() {
+                    var resultContainer = document.getElementById('result-container');
+                    //resultContainer.innerHTML = '';
+
+                    tab.innerHTML = ' '
+                    output.appendChild(tab)
+                    var A = new Array(constraints);
+                    var b = new Array(constraints);
+                    var obj = new Array(vars);
+
+                    for (var i = 0; i < constraints; i++) {
+                        A[i] = new Array(vars);
+                    }
+                    for (var j = 0; j < vars; j++) {
+                        obj[j] = document.getElementById('max' + j + '').value;
+                    }
+
+                    for (var i = 0; i < constraints; i++) {
+                        b[i] = document.getElementById('' + i + '').value;
+
+                        for (var j = 0; j < vars; j++) {
+                            A[i][j] = document.getElementById('' + i + j + '').value;
+                        }
+                    }
+
+                    bigg = new Array();
+                    bigg[0] = A;
+                    bigg[1] = obj;
+                    bigg[2] = b;
+                    fetch("http://127.0.0.1:5000/simplex_solve",
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            // Strnigify the payload into JSON</strong>:
+                            body: JSON.stringify(bigg)
+                        }).then(res => {
+                            if (res.ok) {
+                                return res.json();
+                            } else {
+                                alert("something is wrong");
+                            }
+                        }).then(jsonResponse => {
+                            var result = jsonResponse;
+                            
+                            //var result = JSON.parse(result);
+                            console.log(result);
+
+                            // Clear the result-container before displaying the new results
+                
+                            resultContainer.innerHTML = '';
+                // Display the number of iterations
+                var iterationsSpan = document.createElement('span');
+                iterationsSpan.textContent = 'Iterations: ' + result.iter ;
+                iterationsSpan.setAttribute('id', 'iterationsSpan');
+                resultContainer.appendChild(iterationsSpan);
+                
+
+                // Display the optimal solution
+                var optimalSolutionSpan = document.createElement('span');
+                optimalSolutionSpan.textContent = 'Optimal Solution: ' + result.z ;
+                optimalSolutionSpan.setAttribute('id', 'optimalSolutionSpan');
+                resultContainer.appendChild(optimalSolutionSpan);
+
+                // Display the optimal values of variables
+                var optimalVariablesSpan = document.createElement('span');
+                optimalVariablesSpan.setAttribute('id', 'optimalVariablesSpan');
+                for (var i = 0; i < result.sol.length; i++) {
+                    if (i > 0) {
+                      optimalVariablesSpan.textContent += ' /\\ ';
+                    }
+                    optimalVariablesSpan.textContent += '  X' + (i + 1) + ': ' + result.sol[i] ;
+                  }
+                  
+                  resultContainer.appendChild(optimalVariablesSpan);
+                
+                // Display the tables
+                for (var key in result) {
+                    if (key.startsWith('I')) {
+                        var tableTitle = document.createElement('h3');
+                        tableTitle.textContent = key;
+                        resultContainer.appendChild(tableTitle);
+
+                        var table = makeTable(result[key]);
+                        resultContainer.appendChild(table);
+                    }
+                }
+                document.getElementById('reset').onclick = function () {
+                    output = document.getElementById("system");
+                    set();
+
+                }
+
+                //output.appendChild(resultContainer);
+
+                             
+                        }).catch((err) => console.error(err));
+                }
+                
+
+            };
+
+                
+        </script>
+
+    
+
+</body>
+<button id="home" onclick = "redirectToHomePage()">home</button>
+</html>
+<script>
+    function redirectToHomePage() {
+        window.location.href = "/";
+    }
+     </script>
+
+
+<style>
+  #vars , #constraints{
+    margin-left :10px;
+  }
+  #input{
+    margin-left : 20px;
+  }
+    
+    header {
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      
+      
+      
+      h1 {
+        font-size: 48px;
+        font-weight: bold;
+      }
+      
+      p.lead {
+        font-size: 24px;
+      }
+      
+      /* Custom Bootstrap classes */
+      .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+      
+      .bg-primary {
+        background-color: #007bff !important;
+      }
+      
+      .text-white {
+        color: #fff !important;
+      }
+      
+      
+      
+      
+      .result-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f8f8;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+      
+
+      
+    #optimalVariablesSpan {
+        display: block;
+        font-size: 20px;
+        color: #333;
+        border: 2px solid #007bff;
+        padding: 10px;
+        background-color: #f8f8f8;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      
+      #optimalVariablesSpan::before {
+        content: "🌟 "; /* Add a star emoji before the text */
+      }
+      
+      #optimalVariablesSpan::after {
+        content: " 🌟"; /* Add a star emoji after the text */
+      }
+      
+      #optimalVariablesSpan:hover {
+        background-color: #e0f3ff;
+        border-color: #0056b3;
+        color: #0056b3;
+        transform: scale(1.05);
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+      }
+    span {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 18px;
+        color: #333;
+      }
+      
+      /* Styles for the 'Iterations' span */
+      #iterationsSpan {
+        font-weight: bold;
+      }
+      
+      /* Styles for the 'Optimal Solution' span */
+      #optimalSolutionSpan {
+        color: #007bff;
+      }
+      
+      /* Styles for the 'Optimal Variables' span */
+      #optimalVariablesSpan {
+        font-style: italic;
+        color: #28a745;
+      }
+    
+
+
+    #system {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 600px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    input[type="number"] {
+        width: 50px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: normal;
+    }
+
+    h3 {
+        margin: 20px 0 10px;
+        color: #007bff;
+    }
+
+    .result-section {
+        margin-top: 30px;
+        border-top: 1px solid #ccc;
+        padding-top: 20px;
+    }
+
+    .result-section span {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .result-section h3 {
+        margin-top: 0;
+        font-size: 18px;
+    }
+    body {
+        background-color: #f2f2f2;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+
+    .form-label {
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .result-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    
+
+    
+      .result-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f8f8;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+      
+      .result-container span {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 20px;
+        color: #333;
+      }
+      
+      .result-container h3 {
+        margin-top: 0;
+        font-size: 24px;
+        color: #007bff;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      
+      .result-container::before {
+        content: "🔍"; /* Add a magnifying glass emoji before the result section */
+        font-size: 30px;
+        display: block;
+        margin-bottom: 10px;
+      }
+      
+      #home {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+      }
+      
+      #home:hover {
+        background-color: #0056b3;
+      }
+
+</style>

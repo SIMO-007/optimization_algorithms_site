@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="bg-primary text-white py-4">
+        <div class="container text-center">
+            <h1 class="display-4">GAUSSIAN ELIMINATION SOLVER</h1>
+            <p class="lead">An Elegant Solution for Linear Systems</p>
+        </div>
+    </header>
+
+    <div class="container mt-4">
+        <label for="size">Enter the size of the square matrix (n x n): </label>
+        <input type="number" name="size" id="size">
+        <button id="set" class="btn btn-primary">Set</button>
+    </div>
+
+    <div id="system" class="container mt-4"></div>
+
+    <div id="result-container" class="container mt-4 result-container"></div>
+
+    <script type="text/javascript">
+        function createMatrixTable(matrix) {
+            var table = document.createElement('table');
+            for (var i = 0; i < matrix.length; i++) {
+                var row = document.createElement('tr');
+                for (var j = 0; j < matrix[i].length; j++) {
+                    var cell = document.createElement('td');
+                    cell.textContent = matrix[i][j];
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            return table;
+        }
+    
+        function displayResults(results) {
+            var resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = '';
+
+            var iteration = 0;
+
+            // Display matrices with parentheses
+            for (var i = 0; i < results.length; i += 2) {
+                var matrixContainer = document.createElement('div');
+                matrixContainer.classList.add('matrix-container');
+
+                // Display the iteration number
+                var iterationDiv = document.createElement('div');
+                iterationDiv.textContent = 'Iteration: ' + iteration++;
+                iterationDiv.classList.add('iteration-container');
+                matrixContainer.appendChild(iterationDiv);
+
+                var matrix = results[i];
+                var matrixTable = createMatrixTable(matrix);
+                matrixContainer.appendChild(matrixTable);
+
+                resultContainer.appendChild(matrixContainer);
+
+                // Display the factor (if available)
+                if (results[i + 1]) {
+                    var factorContainer = document.createElement('div');
+                    factorContainer.textContent = results[i + 1];
+                    factorContainer.classList.add('factor-container');
+                    resultContainer.appendChild(factorContainer);
+                }
+            }
+
+            var solutions = results[results.length - 1];
+            if (solutions) {
+                var solutionContainer = document.createElement('div');
+                solutionContainer.classList.add('solution-container');
+
+                var solutionText = 'Solutions: ';
+
+                for (var j = 0; j < solutions.length; j++) {
+                    solutionText += 'x' + (j + 1) + ' = ' + solutions[j];
+                    if (j < solutions.length - 1) {
+                        solutionText += ', ';
+                    }
+                }
+
+                solutionContainer.textContent = solutionText;
+                resultContainer.appendChild(solutionContainer);
+            }
+        }
+        document.getElementById('set').onclick = function set() {
+            var resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = '';
+            var size = parseInt(document.getElementById('size').value);
+            var output = document.getElementById('system');
+            output.innerHTML = '<br>';
+            var br = document.createElement('br');
+            output.appendChild(br);
+            for (var i = 0; i < size; i++) {
+                var item = document.createElement('div');
+                for (var j = 0; j <= size; j++) {
+                    if (j < size) {
+                        item.innerHTML += '<input class="A" type="text" name="" id=' + i + j + ' size="1" value=""> ';
+                        item.innerHTML += 'x' + (j + 1) + ' ';
+                        if (j < size - 1) {
+                            item.innerHTML += ' + ';
+                        }
+                    } else {
+                        item.innerHTML += ' = ';
+                        item.innerHTML += '<input class="A" type="text" name="" id=' + i + j + ' size="1" value=""> <br>';
+                    }
+                }
+                output.appendChild(item);
+            }
+            output.appendChild(br);
+
+            var solveButton = document.createElement('button');
+            solveButton.textContent = 'Solve';
+            solveButton.classList.add('btn', 'btn-primary', 'mt-2');
+            output.appendChild(solveButton);
+
+            solveButton.onclick = function () {
+                var resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = '';
+                var A = new Array(size);
+
+                for (var i = 0; i < size; i++) {
+                    A[i] = new Array(size);
+                    for (var j = 0; j <= size; j++) {
+                        A[i][j] = document.getElementById('' + i + j + '').value;
+                    }
+                }
+
+                fetch("http://127.0.0.1:5000/gau_solve", {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(A)
+                }).then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        alert("Something went wrong.");
+                    }
+                }).then(jsonResponse => {
+                    var result = jsonResponse;
+                    console.log(result);
+                    // Display the results
+                    displayResults(result);
+                }).catch((err) => console.error(err));
+            };
+        };
+    </script>
+
+</body>
+<style>
+    .matrix-container {
+        display: inline-block;
+        margin-right: 10px
+    }
+
+    .matrix-separator {
+        display: inline-block;
+        margin: 0 10px;
+    }
+
+    .factor-container {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+    /* Custom Bootstrap classes */
+    .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .bg-primary {
+        background-color: #007bff !important;
+    }
+
+    .text-white {
+        color: #fff !important;
+    }
+
+    #system {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 600px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    input[type="number"] {
+        width: 50px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: normal;
+    }
+
+    h3 {
+        margin: 20px 0 10px;
+        color: #007bff;
+    }
+
+    .result-section {
+        margin-top: 30px;
+        border-top: 1px solid #ccc;
+        padding-top: 20px;
+    }
+
+    .result-section span {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .result-section h3 {
+        margin-top: 0;
+        font-size: 18px;
+    }
+
+    .result-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f8f8;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .result-container span {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 20px;
+        color: #333;
+    }
+
+    .result-container h3 {
+        margin-top: 0;
+        font-size: 24px;
+        color: #007bff;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .result-container::before {
+        content: "🔍"; /* Add a magnifying glass emoji before the result section */
+        font-size: 30px;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    #home {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+    #home:hover {
+        background-color: #0056b3;
+    }
+</style>
+</html>

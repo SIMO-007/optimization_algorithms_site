@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Solve</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="jumbotron jumbotron-fluid text-center text-white bg-primary">
+    <div class="container">
+      <h1 class="display-3">Easy Solve</h1>
+      <p class="lead">Your one-stop destination for Optimization Algorithms and Linear Algebra Algorithms.</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card algorithm-card bg-info text-white mb-4" onclick="toggleOptions('optimization-options')">
+          <div class="card-body">
+            <h5 class="card-title">Optimization Algorithms</h5>
+            <p class="card-text">Explore our collection of optimization algorithms to solve complex problems.</p>
+            <div class="additional-options" id="optimization-options">
+              <ul>
+                <li onclick="redirectToSimplexPage()">Simplex Method</li>
+               
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card algorithm-card bg-info text-white mb-4" onclick="toggleOptions('linear-options')">
+          <div class="card-body">
+            <h5 class="card-title">Linear Algebra Algorithms</h5>
+            <p class="card-text">Discover our linear algebra algorithms for a variety of mathematical tasks.</p>
+            <div class="additional-options" id="linear-options">
+              <ul>
+                <li onclick="redirectToGaussPage()" >Gaussian Elimination</li>
+
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    function toggleOptions(id) {
+      const options = document.getElementById(id);
+      options.classList.toggle('show-options');
+    }
+
+    function redirectToSimplexPage() {
+      window.location.href = "simplex";
+  }
+  function redirectToGaussPage() {
+    window.location.href = "gauss";
+}
+
+  </script>
+</body>
+
+</html>
+<style>
+    body {
+        background-color: #f8f9fa;
+        padding-top: 0px;
+      }
+      
+      .jumbotron {
+        background-color: #007bff;
+        color: #fff;
+        text-align: center;
+      }
+      
+      h1 {
+        font-size: 4px;
+      }
+      
+      .container {
+        margin-top: 4px;
+      }
+      
+      .algorithm-card {
+        margin-bottom: 20px;
+        cursor: pointer;
+      }
+      
+      .algorithm-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease-in-out;
+      }
+      
+      .additional-options {
+        height: 0;
+        overflow: hidden;
+        transition: height 0.3s ease;
+      }
+      
+      .show-options {
+        height: 100px; /* Adjust the height to accommodate the number of options */
+      }
+      
+</style>
