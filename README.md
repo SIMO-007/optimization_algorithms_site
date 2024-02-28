@@ -1,4 +1,5 @@
-# optimization_algorithms_website
+# optimization algorithms solver website
+
 REQUIREMENTS : 
 
 ** python packages : flask, flask_cors, numpy
